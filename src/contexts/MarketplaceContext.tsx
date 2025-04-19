@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { getContract, Phone } from '@/contracts/PhoneMarketplace';
@@ -42,7 +41,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
   const { provider, account } = useWallet();
   const { toast } = useToast();
 
-  // Mock phone data for development until contract is deployed
+  // Update mock data to match contract structure
   const mockPhones = [
     {
       id: 1,
@@ -51,7 +50,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       modelName: "iPhone 15 Pro",
       modelCode: "A2650",
       imei: "353915102643841",
-      price: "1200",
+      price: ethers.utils.parseEther("1.2").toString(), // Price in DOT
       isSold: false,
       isVerified: false
     },
@@ -62,7 +61,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       modelName: "Galaxy S23 Ultra",
       modelCode: "SM-S918B",
       imei: "354026119462057",
-      price: "1100",
+      price: ethers.utils.parseEther("1.1").toString(),
       isSold: true,
       isVerified: true
     },
@@ -73,7 +72,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       modelName: "Pixel 8 Pro",
       modelCode: "GP-387",
       imei: "352475112219416",
-      price: "900",
+      price: ethers.utils.parseEther("0.9").toString(),
       isSold: false,
       isVerified: false
     }

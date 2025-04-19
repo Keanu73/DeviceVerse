@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ethers } from 'ethers';
 import { useToast } from '@/components/ui/use-toast';
@@ -35,7 +34,11 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
 
-  // Check if wallet is already connected
+  const isNetworkSupported = (chainId: number) => {
+    const supportedNetworks = [1287]; // Moonbase Alpha testnet
+    return supportedNetworks.includes(chainId);
+  };
+
   useEffect(() => {
     const checkConnection = async () => {
       if (window.ethereum) {
@@ -55,7 +58,6 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     checkConnection();
   }, []);
 
-  // Listen for account changes
   useEffect(() => {
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', (accounts: string[]) => {
@@ -70,7 +72,6 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       window.ethereum.on('chainChanged', (chainId: string) => {
         setChainId(parseInt(chainId, 16));
-        // Reload the page when the chain changes
         window.location.reload();
       });
     }
@@ -98,8 +99,19 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
       const network = await provider.getNetwork();
+      
+      if (!isNetworkSupported(network.chainId)) {
+        toast({
+          title: "Network Error",
+          description: "Please connect to Moonbase Alpha testnet",
+          variant: "destructive",
+        });
+        setIsConnecting(false);
+        return;
+      }
+      
+      const signer = provider.getSigner();
       
       setProvider(provider);
       setSigner(signer);
@@ -151,7 +163,6 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   );
 };
 
-// Type declaration for window.ethereum
 declare global {
   interface Window {
     ethereum?: any;

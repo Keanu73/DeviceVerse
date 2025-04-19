@@ -23,8 +23,8 @@ export const PhoneMarketplaceABI = [
   "event PhoneVerified(uint256 indexed phoneId, address indexed verifier)"
 ];
 
-// We'll use a placeholder contract address until we deploy to a Polkadot network
-export const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
+// Update with actual contract address after deployment
+export const CONTRACT_ADDRESS = "0x12d7b1015d6888edbeb19610cfe518310405c685";
 
 export interface Phone {
   id: number;
@@ -41,3 +41,4 @@ export interface Phone {
 export function getContract(provider: ethers.providers.Web3Provider) {
   return new ethers.Contract(CONTRACT_ADDRESS, PhoneMarketplaceABI, provider.getSigner());
 }
+
