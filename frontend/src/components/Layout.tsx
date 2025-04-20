@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex items-center space-x-2">
               <div className="flex items-center font-bold text-2xl">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-purple to-brand-cyan">
-                  PhoneVerse
+                  DevicePlace
                 </span>
               </div>
             </div>
@@ -78,7 +78,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
               <p className="text-gray-500 text-sm">
-                © 2025 PhoneVerse Marketplace. Built on Polkadot.
+                © 2025 DevicePlace Marketplace. Built on Polkadot.
               </p>
             </div>
             <div className="flex space-x-6">

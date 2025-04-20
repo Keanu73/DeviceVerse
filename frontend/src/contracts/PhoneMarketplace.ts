@@ -25,7 +25,7 @@ export const PhoneMarketplaceABI = [
 ];
 
 // Update with actual contract address after deployment
-export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0xD78f8712a607c16e3978D0887B6a41459507af5f";
+export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x04099c92D8AeccE0094F66836Fcb144De0e139Ec";
 
 export interface Phone {
   id: number;

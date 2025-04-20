@@ -524,11 +524,11 @@
 			]
 		},
 		"PhoneMarketplace.sol": {
-			"keccak256": "0xbc4987ea2b3752d7182d668b973f9535dae79243007e549a75d73b19557f447f",
+			"keccak256": "0xfef7376cb84f7578ad836b960fc14f9e9c1ed29c37f7ce1ebfcb5d37b6a84b9d",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://f7e4bd22e226bf6ab8292675fb0d4c082ded7a024189d1ab0f648ac9803168fe",
-				"dweb:/ipfs/QmWoBy6BtpPwBDDj9dfRBy7gFwqUbQjQBv9EQoW8r8ZaCk"
+				"bzz-raw://3d77e418e240742c3935f6a13f35467f2f7eacb9c32fdf4473038a9300ad7c91",
+				"dweb:/ipfs/QmQZwe9SpZJpjj2xQjGH7KipXFKHttJNMB43kyHHLigZCg"
 			]
 		}
 	},

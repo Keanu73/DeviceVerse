@@ -6,6 +6,7 @@ import { Phone } from '@/contracts/PhoneMarketplace';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Check } from 'lucide-react';
+import { useWallet } from '@/contexts/WalletContext';
 
 interface PhoneCardProps {
   phone: Phone;
@@ -13,6 +14,8 @@ interface PhoneCardProps {
 
 const PhoneCard: React.FC<PhoneCardProps> = ({ phone }) => {
   const navigate = useNavigate();
+
+  const {account} = useWallet();
 
   const getImageForPhone = (manufacturer: string) => {
     // In a real app, you'd have actual images for each phone
@@ -51,16 +54,20 @@ const PhoneCard: React.FC<PhoneCardProps> = ({ phone }) => {
           </div>
         )}
         
-        {phone.isSold && (
+        {phone.isSold && (phone.buyer.toLowerCase() !== account.toLowerCase()) && (
           <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
             <span className="text-white font-bold text-xl">SOLD</span>
           </div>
         )}
       </div>
-      
+
       <CardContent className="p-4">
         <div className="font-medium text-lg mb-1">{phone.manufacturer} {phone.modelName}</div>
-        <div className="text-sm text-gray-500 mb-3">Model: {phone.modelCode}</div>
+        <div className="text-sm text-gray-500 mb-3"><b>Device Type:</b> Phone</div>
+        <div className="text-sm text-gray-500 mb-3"><b>Model:</b> {phone.modelCode}</div>
+        <div className="text-sm text-gray-500 mb-3"><b>Seller:</b> {phone.seller.substring(0, 6)}...{phone.seller.substring(38)}</div>
+        <div className="text-sm text-gray-500 mb-3"><b>Status:</b> {phone.isSold ? 'Sold' : 'Available'}</div>
+        {phone.isSold && (<div className="text-sm text-gray-500 mb-3"><b>Buyer:</b> {phone.isSold ? phone.buyer.substring(0, 6) + '...' + phone.buyer.substring(38) : 'N/A'}</div>)}
         <div className="font-bold text-brand-purple">
           {phone.price} DOT
         </div>

@@ -52,7 +52,8 @@ const PhoneDetail = () => {
   
   const isOwner = account && account.toLowerCase() === phone.seller.toLowerCase();
   const canVerify = phone.isSold && !phone.isVerified && account?.toLowerCase() === phone.buyer.toLowerCase();
-  const canBuy = !phone.isSold;
+  // the user should only be able to buy the phone if it is not sold and they are not the owner
+  const canBuy = !phone.isSold && account?.toLowerCase() !== phone.seller.toLowerCase();
   
   const handleBuy = async () => {
     setIsProcessing(true);
@@ -162,15 +163,17 @@ const PhoneDetail = () => {
             </Card>
             
             <div className="space-y-4">
-              {canBuy && (
-                <Button 
-                  onClick={handleBuy} 
-                  className="w-full bg-gradient-to-r from-brand-purple to-brand-cyan hover:opacity-90 transition-opacity"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? 'Processing...' : `Buy Now (${phone.price} DOT)`}
-                </Button>
-              )}
+              {!phone.isSold && (<Button
+                onClick={handleBuy}
+                className="w-full bg-gradient-to-r from-brand-purple to-brand-cyan hover:opacity-90 transition-opacity"
+                disabled={isProcessing || !canBuy}
+              >
+                {isProcessing ? 'Processing...' :
+                  (
+                    phone.isSold && isOwner ? 'You already own this phone' :
+                      (!canBuy ? 'You cannot buy this phone as you are the seller' : phone.isSold && !isOwner ? 'This phone has already been sold' : `Buy Now (${phone.price} DOT)`)
+                  )}
+              </Button>)}
               
               {canVerify && (
                 <Button 

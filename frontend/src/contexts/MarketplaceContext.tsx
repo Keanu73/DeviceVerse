@@ -91,7 +91,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       const contract = getContract(provider);
       const phoneCount = await contract.getPhoneCount();
       
-      const phonePromises = [];
+      const phonePromises: Promise<Phone>[] = [];
       // Fetch phones by 0-based index to match contract storage
       for (let i = 0; i < phoneCount.toNumber(); i++) {
         phonePromises.push(contract.getPhone(i));
@@ -127,7 +127,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       console.error("Error fetching phones:", error);
       toast({
         title: "Error",
-        description: "Failed to load marketplace data",
+        description: error.reason,
         variant: "destructive",
       });
     } finally {
@@ -184,6 +184,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
         modelCode,
         imei,
         priceInWei,
+        //{ gasLimit: 3000n * 1000000n }
       );
       
       toast({
@@ -202,9 +203,11 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       return true;
     } catch (error) {
       console.error("Error listing phone:", error);
+      console.error("Full RPC error:", error)
+      console.error("error.data:", error.data)
       toast({
         title: "Error",
-        description: "Failed to list phone",
+        description: error.reason,
         variant: "destructive",
       });
       return false;
@@ -227,6 +230,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Use basic overrides for value and gas
       const tx = await contract.buyPhone(phoneId, {
         value: priceInWei,
+        gasLimit: 3000n * 1000000n
       });
       
       toast({
@@ -266,8 +270,8 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     try {
       const contract = getContract(provider);
-      // Use simple gas limit override for verification
       const tx = await contract.verifyPhone(phoneId, imei, {
+        //gasLimit: 300000n * 1000000n
       });
       
       toast({
@@ -288,7 +292,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       console.error("Error verifying phone:", error);
       toast({
         title: "Error",
-        description: "Failed to verify phone",
+        description: error.reason,
         variant: "destructive",
       });
       return false;

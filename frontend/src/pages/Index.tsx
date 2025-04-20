@@ -18,10 +18,10 @@ const Index = () => {
       <section className="mb-8">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-brand-purple to-brand-cyan">
-            PhoneVerse Marketplace
+            DevicePlace Marketplace
           </h1>
           <p className="text-xl text-gray-600 mb-6">
-            Buy and sell phones securely on the blockchain
+            Buy and sell devices securely on the blockchain
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Button 

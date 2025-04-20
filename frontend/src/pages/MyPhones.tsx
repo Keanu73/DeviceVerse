@@ -14,7 +14,7 @@ const MyPhones = () => {
   
   // Filter phones by status
   const sellingPhones = myPhones.filter(phone => phone.seller.toLowerCase() === account.toLowerCase() && !phone.isSold);
-  const soldPhones = myPhones.filter(phone => phone.isSold && phone.isVerified);
+  const soldPhones = myPhones.filter(phone => phone.isSold && phone.isVerified && phone.seller.toLowerCase() === account.toLowerCase());
   const pendingPhones = myPhones.filter(phone => phone.isSold && !phone.isVerified && phone.buyer.toLowerCase() === account.toLowerCase());
   
   if (!account) {

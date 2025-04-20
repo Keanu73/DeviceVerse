@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 
 const SellPhone = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const SellPhone = () => {
   const [imei, setImei] = useState('');
   const [price, setPrice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +31,12 @@ const SellPhone = () => {
     }
     
     setIsSubmitting(true);
+
+    toast({
+      title: 'Listing Phone',
+      description: 'Please wait while we list your phone for sale on the blockchain.',
+      duration: 5000,
+    });
     
     try {
       const success = await listPhone(
@@ -113,6 +121,17 @@ const SellPhone = () => {
                   id="imei"
                   placeholder="15-digit IMEI number"
                   value={imei}
+                  maxLength={15}
+                  pattern="\d{15}"
+                  title="IMEI must be a 15-digit number"
+                  className="w-full"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck="false"
+                  onFocus={(e) => e.target.setSelectionRange(0, 15)}
                   onChange={(e) => setImei(e.target.value)}
                   required
                 />
