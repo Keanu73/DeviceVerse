@@ -230,7 +230,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Use basic overrides for value and gas
       const tx = await contract.buyPhone(phoneId, {
         value: priceInWei,
-        gasLimit: 3000n * 1000000n
+        //gasLimit: 3000n * 1000000n
       });
       
       toast({
