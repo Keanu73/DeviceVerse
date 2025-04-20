@@ -1,5 +1,7 @@
 # DeviceVerse Marketplace
 
+A first-hand/second-hand device marketplace built on blockchain, aimed at fostering a higher-trust environment for both buyers and sellers.
+
 ## Demo video
 
 [Video link](https://youtu.be/4Ux9Uff6vu8)
