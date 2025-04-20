@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Layout from '@/components/Layout';
 import PhoneGrid from '@/components/PhoneGrid';
@@ -14,9 +13,9 @@ const MyPhones = () => {
   const navigate = useNavigate();
   
   // Filter phones by status
-  const sellingPhones = myPhones.filter(phone => !phone.isSold);
+  const sellingPhones = myPhones.filter(phone => phone.seller.toLowerCase() === account.toLowerCase() && !phone.isSold);
   const soldPhones = myPhones.filter(phone => phone.isSold && phone.isVerified);
-  const pendingPhones = myPhones.filter(phone => phone.isSold && !phone.isVerified);
+  const pendingPhones = myPhones.filter(phone => phone.isSold && !phone.isVerified && phone.buyer.toLowerCase() === account.toLowerCase());
   
   if (!account) {
     return (

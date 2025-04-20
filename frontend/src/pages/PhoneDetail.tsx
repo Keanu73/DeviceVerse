@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -52,7 +51,7 @@ const PhoneDetail = () => {
   }
   
   const isOwner = account && account.toLowerCase() === phone.seller.toLowerCase();
-  const canVerify = phone.isSold && !phone.isVerified;
+  const canVerify = phone.isSold && !phone.isVerified && account?.toLowerCase() === phone.buyer.toLowerCase();
   const canBuy = !phone.isSold;
   
   const handleBuy = async () => {

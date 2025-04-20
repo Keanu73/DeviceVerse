@@ -1,4 +1,3 @@
-
 import { ethers } from "ethers";
 
 // ABI for the Phone Marketplace contract
@@ -13,18 +12,20 @@ export const PhoneMarketplaceABI = [
   "function listPhone(string manufacturer, string modelName, string modelCode, string imei, uint256 price) returns (uint256)",
   "function buyPhone(uint256 phoneId) payable",
   "function verifyPhone(uint256 phoneId, string imei) returns (bool)",
-  "function getPhone(uint256 phoneId) view returns (address seller, string manufacturer, string modelName, string modelCode, string imei, uint256 price, bool isSold, bool isVerified)",
+  "function getPhone(uint256 phoneId) view returns (address seller, string manufacturer, string modelName, string modelCode, string imei, uint256 price, bool isSold, bool isVerified, bool isDispatched, bool isReceived, address buyer)",
   "function getPhoneCount() view returns (uint256)",
   "function getMyPhones() view returns (uint256[])",
   
   // Events
   "event PhoneListed(uint256 indexed phoneId, address indexed seller, uint256 price)",
   "event PhoneSold(uint256 indexed phoneId, address indexed seller, address indexed buyer, uint256 price)",
-  "event PhoneVerified(uint256 indexed phoneId, address indexed verifier)"
+  "event PhoneVerified(uint256 indexed phoneId, address indexed verifier)",
+  "event PhoneDispatched(uint256 indexed phoneId, address indexed seller)",
+  "event PhoneReceived(uint256 indexed phoneId, address indexed buyer)"
 ];
 
 // Update with actual contract address after deployment
-export const CONTRACT_ADDRESS = "0x12d7b1015d6888edbeb19610cfe518310405c685";
+export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0xD78f8712a607c16e3978D0887B6a41459507af5f";
 
 export interface Phone {
   id: number;
@@ -36,9 +37,9 @@ export interface Phone {
   price: string;
   isSold: boolean;
   isVerified: boolean;
+  buyer: string;
 }
 
 export function getContract(provider: ethers.providers.Web3Provider) {
   return new ethers.Contract(CONTRACT_ADDRESS, PhoneMarketplaceABI, provider.getSigner());
 }
-

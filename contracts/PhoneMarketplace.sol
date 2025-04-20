@@ -2,10 +2,14 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract PhoneMarketplace is ReentrancyGuard {
-    IERC20 public immutable token; // The ERC20 token used for transactions
+    // Using native WND token on Westend
+    uint256 public constant CHAIN_ID = 420420421;
+    string public constant RPC_URL =
+        "https://westend-asset-hub-eth-rpc.polkadot.io";
+    string public constant EXPLORER_URL = "https://assethub-westend.subscan.io";
+    string public constant SYMBOL = "WND";
 
     struct Phone {
         address seller;
@@ -24,48 +28,67 @@ contract PhoneMarketplace is ReentrancyGuard {
     Phone[] public phones;
     mapping(address => uint256[]) public userPhones;
 
-    event PhoneListed(uint256 indexed phoneId, address indexed seller, uint256 price);
-    event PhoneSold(uint256 indexed phoneId, address indexed seller, address indexed buyer, uint256 price);
+    event PhoneListed(
+        uint256 indexed phoneId,
+        address indexed seller,
+        uint256 price
+    );
+    event PhoneSold(
+        uint256 indexed phoneId,
+        address indexed seller,
+        address indexed buyer,
+        uint256 price
+    );
     event PhoneVerified(uint256 indexed phoneId, address indexed verifier);
     event PhoneDispatched(uint256 indexed phoneId, address indexed seller);
     event PhoneReceived(uint256 indexed phoneId, address indexed buyer);
 
-    constructor(address _tokenAddress) {
-        token = IERC20(_tokenAddress);
+    constructor() {
+        require(
+            block.chainid == CHAIN_ID,
+            "PhoneMarketplace: unsupported chain"
+        );
     }
 
-    function listPhone(string memory manufacturer, string memory modelName, string memory modelCode, string memory imei, uint256 price) external returns (uint256) {
+    function listPhone(
+        string memory manufacturer,
+        string memory modelName,
+        string memory modelCode,
+        string memory imei,
+        uint256 price
+    ) external returns (uint256) {
         uint256 phoneId = phones.length;
-        phones.push(Phone({
-            seller: msg.sender,
-            manufacturer: manufacturer,
-            modelName: modelName,
-            modelCode: modelCode,
-            imei: imei,
-            price: price,
-            isSold: false,
-            isVerified: false,
-            isDispatched: false,
-            isReceived: false,
-            buyer: address(0)
-        }));
+        phones.push(
+            Phone({
+                seller: msg.sender,
+                manufacturer: manufacturer,
+                modelName: modelName,
+                modelCode: modelCode,
+                imei: imei,
+                price: price,
+                isSold: false,
+                isVerified: false,
+                isDispatched: false,
+                isReceived: false,
+                buyer: address(0)
+            })
+        );
         userPhones[msg.sender].push(phoneId);
         emit PhoneListed(phoneId, msg.sender, price);
         return phoneId;
     }
 
-    function buyPhone(uint256 phoneId) external nonReentrant {
+    function buyPhone(uint256 phoneId) external payable nonReentrant {
         require(phoneId < phones.length, "Phone does not exist");
         Phone storage phone = phones[phoneId];
         require(!phone.isSold, "Phone already sold");
         require(phone.seller != msg.sender, "Cannot buy your own phone");
-        require(token.balanceOf(msg.sender) >= phone.price, "Insufficient balance");
-
-        // Transfer tokens to escrow (this contract)
-        require(token.transferFrom(msg.sender, address(this), phone.price), "Token transfer failed");
+        require(msg.value == phone.price, "Incorrect payment");
 
         phone.isSold = true;
         phone.buyer = msg.sender;
+        // Add to buyer's phone list
+        userPhones[msg.sender].push(phoneId);
         emit PhoneSold(phoneId, phone.seller, msg.sender, phone.price);
     }
 
@@ -91,25 +114,62 @@ contract PhoneMarketplace is ReentrancyGuard {
         phone.isReceived = true;
         emit PhoneReceived(phoneId, msg.sender);
 
-        // Transfer tokens from escrow to seller
-        require(token.transfer(phone.seller, phone.price), "Token transfer failed");
+        // Transfer native WND from escrow to seller
+        payable(phone.seller).transfer(phone.price);
     }
 
-    function verifyPhone(uint256 phoneId, string memory imei) external returns (bool) {
+    function verifyPhone(
+        uint256 phoneId,
+        string memory imei
+    ) external returns (bool) {
         require(phoneId < phones.length, "Phone does not exist");
         Phone storage phone = phones[phoneId];
         require(!phone.isVerified, "Phone already verified");
-        require(keccak256(abi.encodePacked(phone.imei)) == keccak256(abi.encodePacked(imei)), "IMEI mismatch");
+        require(
+            keccak256(abi.encodePacked(phone.imei)) ==
+                keccak256(abi.encodePacked(imei)),
+            "IMEI mismatch"
+        );
 
         phone.isVerified = true;
         emit PhoneVerified(phoneId, msg.sender);
         return true;
     }
 
-    function getPhone(uint256 phoneId) external view returns (address seller, string memory manufacturer, string memory modelName, string memory modelCode, string memory imei, uint256 price, bool isSold, bool isVerified, bool isDispatched, bool isReceived, address buyer) {
+    function getPhone(
+        uint256 phoneId
+    )
+        external
+        view
+        returns (
+            address seller,
+            string memory manufacturer,
+            string memory modelName,
+            string memory modelCode,
+            string memory imei,
+            uint256 price,
+            bool isSold,
+            bool isVerified,
+            bool isDispatched,
+            bool isReceived,
+            address buyer
+        )
+    {
         require(phoneId < phones.length, "Phone does not exist");
         Phone storage phone = phones[phoneId];
-        return (phone.seller, phone.manufacturer, phone.modelName, phone.modelCode, phone.imei, phone.price, phone.isSold, phone.isVerified, phone.isDispatched, phone.isReceived, phone.buyer);
+        return (
+            phone.seller,
+            phone.manufacturer,
+            phone.modelName,
+            phone.modelCode,
+            phone.imei,
+            phone.price,
+            phone.isSold,
+            phone.isVerified,
+            phone.isDispatched,
+            phone.isReceived,
+            phone.buyer
+        );
     }
 
     function getPhoneCount() external view returns (uint256) {

@@ -4,6 +4,43 @@ import { getContract, Phone } from '@/contracts/PhoneMarketplace';
 import { useWallet } from './WalletContext';
 import { useToast } from '@/components/ui/use-toast';
 
+// Move mock data outside component to keep identity stable
+const mockPhones: Phone[] = [
+  {
+    id: 1,
+    seller: "0x123...abc",
+    manufacturer: "Apple",
+    modelName: "iPhone 15 Pro",
+    modelCode: "A2650",
+    imei: "353915102643841",
+    price: ethers.utils.parseEther("1.2").toString(),
+    isSold: false,
+    isVerified: false
+  },
+  {
+    id: 2,
+    seller: "0x456...def",
+    manufacturer: "Samsung",
+    modelName: "Galaxy S23 Ultra",
+    modelCode: "SM-S918B",
+    imei: "354026119462057",
+    price: ethers.utils.parseEther("1.1").toString(),
+    isSold: true,
+    isVerified: true
+  },
+  {
+    id: 3,
+    seller: "0x789...ghi",
+    manufacturer: "Google",
+    modelName: "Pixel 8 Pro",
+    modelCode: "GP-387",
+    imei: "352475112219416",
+    price: ethers.utils.parseEther("0.9").toString(),
+    isSold: false,
+    isVerified: false
+  }
+];
+
 interface MarketplaceContextType {
   phones: Phone[];
   myPhones: Phone[];
@@ -41,65 +78,29 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
   const { provider, account } = useWallet();
   const { toast } = useToast();
 
-  // Update mock data to match contract structure
-  const mockPhones = [
-    {
-      id: 1,
-      seller: "0x123...abc",
-      manufacturer: "Apple",
-      modelName: "iPhone 15 Pro",
-      modelCode: "A2650",
-      imei: "353915102643841",
-      price: ethers.utils.parseEther("1.2").toString(), // Price in DOT
-      isSold: false,
-      isVerified: false
-    },
-    {
-      id: 2,
-      seller: "0x456...def",
-      manufacturer: "Samsung",
-      modelName: "Galaxy S23 Ultra",
-      modelCode: "SM-S918B",
-      imei: "354026119462057",
-      price: ethers.utils.parseEther("1.1").toString(),
-      isSold: true,
-      isVerified: true
-    },
-    {
-      id: 3,
-      seller: "0x789...ghi",
-      manufacturer: "Google",
-      modelName: "Pixel 8 Pro",
-      modelCode: "GP-387",
-      imei: "352475112219416",
-      price: ethers.utils.parseEther("0.9").toString(),
-      isSold: false,
-      isVerified: false
-    }
-  ];
-
   const refreshPhones = useCallback(async () => {
+    setLoadingPhones(true);
     if (!provider) {
       // Use mock data when not connected to blockchain
-      setPhones(mockPhones);
-      setMyPhones(mockPhones.slice(0, 1)); // Mock owned phones
+      setPhones([]);
+      setMyPhones([]);
+      setLoadingPhones(false);
       return;
     }
-
-    setLoadingPhones(true);
     try {
       const contract = getContract(provider);
       const phoneCount = await contract.getPhoneCount();
       
       const phonePromises = [];
-      for (let i = 1; i <= phoneCount.toNumber(); i++) {
+      // Fetch phones by 0-based index to match contract storage
+      for (let i = 0; i < phoneCount.toNumber(); i++) {
         phonePromises.push(contract.getPhone(i));
       }
       
       const phonesData = await Promise.all(phonePromises);
       
       const formattedPhones: Phone[] = phonesData.map((phone, index) => ({
-        id: index + 1,
+        id: index,
         seller: phone.seller,
         manufacturer: phone.manufacturer,
         modelName: phone.modelName,
@@ -108,13 +109,15 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
         price: ethers.utils.formatEther(phone.price),
         isSold: phone.isSold,
         isVerified: phone.isVerified,
+        buyer: phone.buyer,
       }));
       
       setPhones(formattedPhones);
       
       // Get my phones
       if (account) {
-        const myPhoneIds = await contract.getMyPhones();
+        const myPhoneIdsRaw = await contract.getMyPhones();
+        const myPhoneIds = myPhoneIdsRaw.map(id => id.toNumber());
         const myFilteredPhones = formattedPhones.filter(phone => 
           myPhoneIds.includes(phone.id) || phone.seller.toLowerCase() === account.toLowerCase()
         );
@@ -130,11 +133,30 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
     } finally {
       setLoadingPhones(false);
     }
-  }, [provider, account, toast, mockPhones]);
+  }, [provider, account, toast]);
 
   useEffect(() => {
     refreshPhones();
   }, [refreshPhones]);
+
+  // Refresh on relevant contract events
+  useEffect(() => {
+    if (!provider) return;
+    const contract = getContract(provider);
+    const update = () => refreshPhones();
+    contract.on('PhoneListed', update);
+    contract.on('PhoneSold', update);
+    contract.on('PhoneVerified', update);
+    contract.on('PhoneDispatched', update);
+    contract.on('PhoneReceived', update);
+    return () => {
+      contract.off('PhoneListed', update);
+      contract.off('PhoneSold', update);
+      contract.off('PhoneVerified', update);
+      contract.off('PhoneDispatched', update);
+      contract.off('PhoneReceived', update);
+    };
+  }, [provider, refreshPhones]);
 
   const listPhone = async (
     manufacturer: string,
@@ -155,8 +177,14 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
     try {
       const contract = getContract(provider);
       const priceInWei = ethers.utils.parseEther(price);
-      
-      const tx = await contract.listPhone(manufacturer, modelName, modelCode, imei, priceInWei);
+      // Use basic gas limit override to avoid RPC issues
+      const tx = await contract.listPhone(
+        manufacturer,
+        modelName,
+        modelCode,
+        imei,
+        priceInWei,
+      );
       
       toast({
         title: "Transaction Submitted",
@@ -196,8 +224,10 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
     try {
       const contract = getContract(provider);
       const priceInWei = ethers.utils.parseEther(price);
-      
-      const tx = await contract.buyPhone(phoneId, { value: priceInWei });
+      // Use basic overrides for value and gas
+      const tx = await contract.buyPhone(phoneId, {
+        value: priceInWei,
+      });
       
       toast({
         title: "Transaction Submitted",
@@ -208,7 +238,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       
       toast({
         title: "Success",
-        description: "You've successfully purchased the phone!",
+        description: "You've successfully purchased the phone! Please give some time for the transaction to be confirmed on the blockchain.",
       });
       
       refreshPhones();
@@ -217,7 +247,7 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
       console.error("Error buying phone:", error);
       toast({
         title: "Error",
-        description: "Failed to buy phone",
+        description: error.reason,
         variant: "destructive",
       });
       return false;
@@ -236,7 +266,9 @@ export const MarketplaceProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     try {
       const contract = getContract(provider);
-      const tx = await contract.verifyPhone(phoneId, imei);
+      // Use simple gas limit override for verification
+      const tx = await contract.verifyPhone(phoneId, imei, {
+      });
       
       toast({
         title: "Verification Submitted",

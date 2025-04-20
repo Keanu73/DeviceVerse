@@ -34,9 +34,14 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
 
+  // Chain configuration via environment variables
+  const TARGET_CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID) || 420420421;
+  const RPC_URL = import.meta.env.VITE_RPC_URL || 'https://westend-asset-hub-eth-rpc.polkadot.io';
+  const EXPLORER_URL = import.meta.env.VITE_EXPLORER_URL || 'https://assethub-westend.subscan.io';
+  const CURRENCY_SYMBOL = import.meta.env.VITE_CURRENCY_SYMBOL || 'WND';
+
   const isNetworkSupported = (chainId: number) => {
-    const supportedNetworks = [1287]; // Moonbase Alpha testnet
-    return supportedNetworks.includes(chainId);
+    return chainId === TARGET_CHAIN_ID;
   };
 
   useEffect(() => {
@@ -102,9 +107,20 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const network = await provider.getNetwork();
       
       if (!isNetworkSupported(network.chainId)) {
+        // Attempt to add and switch to Polkadot Westend Asset Hub Testnet
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0x' + TARGET_CHAIN_ID.toString(16),
+            chainName: 'Westend Asset Hub Testnet',
+            rpcUrls: [RPC_URL],
+            blockExplorerUrls: [EXPLORER_URL],
+            nativeCurrency: { name: 'Westend Native Token', symbol: CURRENCY_SYMBOL, decimals: 18 },
+          }],
+        });
         toast({
           title: "Network Error",
-          description: "Please connect to Moonbase Alpha testnet",
+          description: "Switched to Westend Asset Hub Testnet. Please reconnect your wallet.",
           variant: "destructive",
         });
         setIsConnecting(false);
